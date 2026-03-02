@@ -9,9 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/google": "^0.0.52",
-    "@ai-sdk/react": "^3.0.108",
-    "ai": "^3.4.9",
+    "@ai-sdk/google": "1.1.11",
+    "@ai-sdk/react": "1.1.18",
+    "ai": "4.1.52",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

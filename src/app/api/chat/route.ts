@@ -1,7 +1,12 @@
-import { google } from '@ai-sdk/google';
+import { google, createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { getBoards, getBoardSchema, getBoardItems, getItemsByColumnValue, getItemsByNames } from '@/lib/monday';
+
+// Explicitly configure Google provider to support GEMINI_API_KEY
+const googleProvider = createGoogleGenerativeAI({
+    apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
 // Define a more specific schema for Monday items to satisfy Gemini's tool validation
 const MondayItemSchema = z.object({
@@ -50,7 +55,7 @@ export async function POST(req: Request) {
     // Live Mode: Use Vercel AI SDK
     try {
         const result = await streamText({
-            model: google('gemini-1.5-flash-latest'), // Use latest to ensure stability
+            model: googleProvider('gemini-1.5-flash'), // Using consistent model name after SDK upgrade
             messages,
             system: `You are a Senior BI Expert and Data Analyst for a high-growth company. 
 You act as a founder-level AI agent communicating directly with executives.
@@ -127,7 +132,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                     parameters: z.object({
                         boardId: z.string().describe('The ID of the monday.com board (e.g. 12345678)'),
                     }),
-                    execute: async ({ boardId }) => {
+                    execute: async ({ boardId }: { boardId: string }) => {
                         console.log(`[ACTION TRACE]Fetching Schema for Board ${boardId}`);
                         try {
                             const schema = await getBoardSchema(boardId);
@@ -143,7 +148,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                         boardId: z.string().describe('The ID of the monday.com board'),
                         limit: z.number().optional().describe('Number of items to fetch. Default is 25. Do not request more than 50 at a time.'),
                     }),
-                    execute: async ({ boardId, limit }) => {
+                    execute: async ({ boardId, limit }: { boardId: string, limit?: number }) => {
                         console.log(`[ACTION TRACE] Fetching Items for Board ${boardId}(Limit: ${limit || 25})`);
                         try {
                             const items = await getBoardItems(boardId, limit || 25);
@@ -161,10 +166,10 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                         operator: z.enum(['equals', 'contains', 'greaterThan', 'lessThan']).describe('The comparison operator.'),
                         value: z.string().describe('The value to compare against.')
                     }),
-                    execute: async ({ items, columnName, operator, value }) => {
+                    execute: async ({ items, columnName, operator, value }: { items: any[], columnName: string, operator: string, value: string }) => {
                         console.log(`[ACTION TRACE] Filtering Items by ${columnName} ${operator} ${value}`);
                         try {
-                            const filtered = items.filter(item => {
+                            const filtered = items.filter((item: any) => {
                                 const col = item.column_values?.find((c: any) =>
                                     c.title?.toLowerCase() === columnName.toLowerCase() ||
                                     c.id?.toLowerCase() === columnName.toLowerCase()
@@ -194,10 +199,10 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                         columnName: z.string().describe('The column name (title) or ID to sort by.'),
                         order: z.enum(['asc', 'desc']).describe('Sort in ascending or descending order.')
                     }),
-                    execute: async ({ items, columnName, order }) => {
+                    execute: async ({ items, columnName, order }: { items: any[], columnName: string, order: 'asc' | 'desc' }) => {
                         console.log(`[ACTION TRACE] Sorting Items by ${columnName} (${order})`);
                         try {
-                            const sorted = [...items].sort((a, b) => {
+                            const sorted = [...items].sort((a: any, b: any) => {
                                 const colA = a.column_values?.find((c: any) => c.title?.toLowerCase() === columnName.toLowerCase() || c.id === columnName)?.text || '';
                                 const colB = b.column_values?.find((c: any) => c.title?.toLowerCase() === columnName.toLowerCase() || c.id === columnName)?.text || '';
 
@@ -223,7 +228,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                         columnId: z.string().describe('The ID of the column (e.g. "status", "priority"). Use getBoardSchema to find IDs.'),
                         value: z.string().describe('The value to search for (e.g. "Emergency")'),
                     }),
-                    execute: async ({ boardId, columnId, value }) => {
+                    execute: async ({ boardId, columnId, value }: { boardId: string, columnId: string, value: string }) => {
                         console.log(`[ACTION TRACE] Searching Items on Board ${boardId} where ${columnId} is ${value}`);
                         try {
                             const items = await getItemsByColumnValue(boardId, columnId, value);
@@ -239,7 +244,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                         boardId: z.string().describe('The ID of the monday.com board'),
                         names: z.array(z.string()).describe('List of item names to search for.'),
                     }),
-                    execute: async ({ boardId, names }) => {
+                    execute: async ({ boardId, names }: { boardId: string, names: string[] }) => {
                         console.log(`[ACTION TRACE] Searching Items on Board ${boardId} by names: ${names.join(', ')}`);
                         try {
                             const items = await getItemsByNames(boardId, names);
@@ -256,10 +261,10 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                         columnName: z.string().describe('The column name (title) or ID containing numeric data.'),
                         operation: z.enum(['sum', 'average', 'count', 'min', 'max']).describe('The mathematical operation to perform.')
                     }),
-                    execute: async ({ items, columnName, operation }) => {
+                    execute: async ({ items, columnName, operation }: { items: any[], columnName: string, operation: string }) => {
                         console.log(`[ACTION TRACE] Calculating ${operation} for ${columnName}`);
                         try {
-                            const values = items.map(item => {
+                            const values = items.map((item: any) => {
                                 const col = item.column_values?.find((c: any) =>
                                     c.title?.toLowerCase() === columnName.toLowerCase() ||
                                     c.id === columnName
@@ -269,7 +274,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                                 const cleanValue = (col.text || col.value || '').replace(/[^\d.-]/g, '');
                                 const num = parseFloat(cleanValue);
                                 return isNaN(num) ? null : num;
-                            }).filter(v => v !== null) as number[];
+                            }).filter((v: any) => v !== null) as number[];
 
                             if (values.length === 0 && operation !== 'count') {
                                 return { success: true, result: 0, note: "No numeric values found for this column." };
