@@ -111,3 +111,21 @@ export async function getBoardItems(boardId: string | number, limit: number = 25
 
     return data?.boards?.[0];
 }
+
+/**
+ * Fetches the list of accessible boards.
+ * This helps the LLM find the correct board ID for a given context or query.
+ */
+export async function getBoards() {
+    const query = `
+    query {
+      boards {
+        id
+        name
+      }
+    }
+  `;
+
+    const data = await executeGraphQL(query);
+    return data?.boards || [];
+}
