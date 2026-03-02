@@ -68,7 +68,7 @@ export function ActionTrace({ logs, className }: ActionTraceProps) {
             {logs.map((log) => (
               <div key={log.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-muted-foreground/50">
+                  <span className="text-muted-foreground/50" suppressHydrationWarning>
                     [{log.timestamp.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second:'2-digit' })}]
                   </span>
                   <span className={cn("font-semibold", getLogColor(log.type))}>

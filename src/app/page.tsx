@@ -1,20 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCustomChat } from "@/lib/use-custom-chat";
 import { ChatInterface } from "@/components/chat-interface";
 import { ActionTrace, TraceLog } from "@/components/action-trace";
 
 export default function DashboardPage() {
   const [isMockMode, setIsMockMode] = useState(true);
-  const [logs, setLogs] = useState<TraceLog[]>([
-    {
-      id: "init",
-      timestamp: new Date(),
-      type: "info",
-      message: "System initialized. Mock mode is active.",
-    }
-  ]);
+  const [logs, setLogs] = useState<TraceLog[]>([]);
+
+  useEffect(() => {
+    setLogs([
+      {
+        id: "init",
+        timestamp: new Date(),
+        type: "info",
+        message: "System initialized. Mock mode is active.",
+      }
+    ]);
+  }, []);
 
   const addLog = (type: TraceLog["type"], message: string, details?: string) => {
     setLogs((prev) => [
