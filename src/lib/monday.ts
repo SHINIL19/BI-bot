@@ -118,8 +118,8 @@ export async function getBoardItems(boardId: string | number, limit: number = 25
  */
 export async function getItemsByColumnValue(boardId: string | number, columnId: string, value: string, limit: number = 50) {
     const query = `
-    query GetItemsByColumnValue($boardId: [ID!], $columnId: String!, $value: [String!], $limit: Int!) {
-      items_page_by_column_values(board_id: ${boardId}, columns: [{column_id: $columnId, column_values: $value}], limit: $limit) {
+    query GetItemsByColumnValue($boardId: ID!, $columnId: String!, $value: [String!], $limit: Int!) {
+      items_page_by_column_values(board_id: $boardId, columns: [{column_id: $columnId, column_values: $value}], limit: $limit) {
         cursor
         items {
           id
@@ -138,6 +138,7 @@ export async function getItemsByColumnValue(boardId: string | number, columnId: 
   `;
 
     const data = await executeGraphQL(query, {
+        boardId: String(boardId),
         columnId,
         value: [value],
         limit
@@ -153,7 +154,7 @@ export async function getItemsByNames(boardId: string | number, names: string[])
     const query = `
     query GetItemsByNames($boardId: [ID!], $names: [String!]) {
       boards(ids: $boardId) {
-        items_page(query_params: {ids: [], rules: [{column_id: "name", compare_value: $names, operator: any_of}]}) {
+        items_page(query_params: {rules: [{column_id: "name", compare_value: $names, operator: any_of}]}) {
           items {
             id
             name
@@ -170,7 +171,7 @@ export async function getItemsByNames(boardId: string | number, names: string[])
   `;
 
     const data = await executeGraphQL(query, {
-        boardId: String(boardId),
+        boardId: [String(boardId)],
         names
     });
 

@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     // Live Mode: Use Vercel AI SDK
     try {
         const result = await streamText({
-            model: google('gemini-2.5-flash'), // Make sure GEMINI_API_KEY is in .env.local
+            model: google('gemini-1.5-flash'), // gemini-1.5-flash is stable and fast
             messages,
             system: `You are a Senior BI Expert and Data Analyst for a high-growth company. 
 You act as a founder-level AI agent communicating directly with executives.
