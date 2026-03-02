@@ -3,6 +3,18 @@ import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { getBoards, getBoardSchema, getBoardItems, getItemsByColumnValue, getItemsByNames } from '@/lib/monday';
 
+// Define a more specific schema for Monday items to satisfy Gemini's tool validation
+const MondayItemSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    column_values: z.array(z.object({
+        id: z.string(),
+        text: z.string().optional().nullable(),
+        value: z.string().optional().nullable(),
+        title: z.string().optional()
+    })).optional()
+});
+
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
@@ -144,7 +156,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                 filterBoardItems: tool({
                     description: 'Filter a list of items based on a specific column value. Use this to find specific orders, clients, or priorities from the raw items data.',
                     parameters: z.object({
-                        items: z.array(z.any()).describe('The array of items to filter (usually from getBoardItems).'),
+                        items: z.array(MondayItemSchema).describe('The array of items to filter (usually from getBoardItems).'),
                         columnName: z.string().describe('The name (title) of the column to filter by. Must exactly match the schema title.'),
                         operator: z.enum(['equals', 'contains', 'greaterThan', 'lessThan']).describe('The comparison operator.'),
                         value: z.string().describe('The value to compare against.')
@@ -178,7 +190,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                 sortBoardItems: tool({
                     description: 'Sort a list of items. Use this to find top revenue items, oldest tickets, etc.',
                     parameters: z.object({
-                        items: z.array(z.any()).describe('The array of items to sort.'),
+                        items: z.array(MondayItemSchema).describe('The array of items to sort.'),
                         columnName: z.string().describe('The column name (title) or ID to sort by.'),
                         order: z.enum(['asc', 'desc']).describe('Sort in ascending or descending order.')
                     }),
@@ -240,7 +252,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                 calculateMetrics: tool({
                     description: 'Calculate metrics (sum, average, count) from a list of items based on a numeric column.',
                     parameters: z.object({
-                        items: z.array(z.any()).describe('The array of items to analyze.'),
+                        items: z.array(MondayItemSchema).describe('The array of items to analyze.'),
                         columnName: z.string().describe('The column name (title) or ID containing numeric data.'),
                         operation: z.enum(['sum', 'average', 'count', 'min', 'max']).describe('The mathematical operation to perform.')
                     }),
