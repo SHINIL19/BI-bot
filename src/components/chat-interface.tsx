@@ -8,9 +8,16 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Send, Bot, User, ShieldAlert, Zap } from "lucide-react";
+import { Message } from "@/lib/use-custom-chat";
 
 interface ChatInterfaceProps {
-    chatHelpers: any;
+    chatHelpers: {
+        messages: Message[];
+        input: string;
+        handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+        handleSubmit: (e: React.FormEvent<HTMLFormElement>, options?: { data?: any }) => void;
+        isLoading: boolean;
+    };
     isMockMode: boolean;
     setIsMockMode: (checked: boolean) => void;
     className?: string;
@@ -75,7 +82,7 @@ export function ChatInterface({
                     </div>
                 )}
 
-                {messages.map((m) => (
+                {messages.map((m: Message) => (
                     <div key={m.id} className={cn("flex gap-3 max-w-[85%]", m.role === 'user' ? "ml-auto" : "mr-auto")}>
                         {m.role === 'assistant' && (
                             <div className="h-8 w-8 shrink-0 rounded-full bg-[#0073ea]/10 flex items-center justify-center mt-1">
