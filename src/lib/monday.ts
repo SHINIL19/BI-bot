@@ -113,6 +113,71 @@ export async function getBoardItems(boardId: string | number, limit: number = 25
 }
 
 /**
+ * Fetches items from a board filtered by a specific column value.
+ * This is more efficient than fetching all items and filtering manually.
+ */
+export async function getItemsByColumnValue(boardId: string | number, columnId: string, value: string, limit: number = 50) {
+    const query = `
+    query GetItemsByColumnValue($boardId: [ID!], $columnId: String!, $value: [String!], $limit: Int!) {
+      items_page_by_column_values(board_id: ${boardId}, columns: [{column_id: $columnId, column_values: $value}], limit: $limit) {
+        cursor
+        items {
+          id
+          name
+          created_at
+          updated_at
+          column_values {
+            id
+            text
+            type
+            value
+          }
+        }
+      }
+    }
+  `;
+
+    const data = await executeGraphQL(query, {
+        columnId,
+        value: [value],
+        limit
+    });
+
+    return data?.items_page_by_column_values?.items || [];
+}
+
+/**
+ * Searches for items by name.
+ */
+export async function getItemsByNames(boardId: string | number, names: string[]) {
+    const query = `
+    query GetItemsByNames($boardId: [ID!], $names: [String!]) {
+      boards(ids: $boardId) {
+        items_page(query_params: {ids: [], rules: [{column_id: "name", compare_value: $names, operator: any_of}]}) {
+          items {
+            id
+            name
+            column_values {
+              id
+              text
+              type
+              value
+            }
+          }
+        }
+      }
+    }
+  `;
+
+    const data = await executeGraphQL(query, {
+        boardId: String(boardId),
+        names
+    });
+
+    return data?.boards?.[0]?.items_page?.items || [];
+}
+
+/**
  * Fetches the list of accessible boards.
  * This helps the LLM find the correct board ID for a given context or query.
  */

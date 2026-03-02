@@ -1,7 +1,7 @@
 import { google } from '@ai-sdk/google';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
-import { getBoards, getBoardSchema, getBoardItems } from '@/lib/monday';
+import { getBoards, getBoardSchema, getBoardItems, getItemsByColumnValue, getItemsByNames } from '@/lib/monday';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -136,6 +136,153 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                         try {
                             const items = await getBoardItems(boardId, limit || 25);
                             return { success: true, items };
+                        } catch (error: any) {
+                            return { success: false, error: error.message };
+                        }
+                    }
+                }),
+                filterBoardItems: tool({
+                    description: 'Filter a list of items based on a specific column value. Use this to find specific orders, clients, or priorities from the raw items data.',
+                    parameters: z.object({
+                        items: z.array(z.any()).describe('The array of items to filter (usually from getBoardItems).'),
+                        columnName: z.string().describe('The name (title) of the column to filter by. Must exactly match the schema title.'),
+                        operator: z.enum(['equals', 'contains', 'greaterThan', 'lessThan']).describe('The comparison operator.'),
+                        value: z.string().describe('The value to compare against.')
+                    }),
+                    execute: async ({ items, columnName, operator, value }) => {
+                        console.log(`[ACTION TRACE] Filtering Items by ${columnName} ${operator} ${value}`);
+                        try {
+                            const filtered = items.filter(item => {
+                                const col = item.column_values?.find((c: any) =>
+                                    c.title?.toLowerCase() === columnName.toLowerCase() ||
+                                    c.id?.toLowerCase() === columnName.toLowerCase()
+                                );
+                                if (!col) return false;
+
+                                const colValue = col.text || col.value || '';
+
+                                switch (operator) {
+                                    case 'equals': return colValue.toLowerCase() === value.toLowerCase();
+                                    case 'contains': return colValue.toLowerCase().includes(value.toLowerCase());
+                                    case 'greaterThan': return parseFloat(colValue) > parseFloat(value);
+                                    case 'lessThan': return parseFloat(colValue) < parseFloat(value);
+                                    default: return false;
+                                }
+                            });
+                            return { success: true, count: filtered.length, filteredItems: filtered };
+                        } catch (error: any) {
+                            return { success: false, error: error.message };
+                        }
+                    }
+                }),
+                sortBoardItems: tool({
+                    description: 'Sort a list of items. Use this to find top revenue items, oldest tickets, etc.',
+                    parameters: z.object({
+                        items: z.array(z.any()).describe('The array of items to sort.'),
+                        columnName: z.string().describe('The column name (title) or ID to sort by.'),
+                        order: z.enum(['asc', 'desc']).describe('Sort in ascending or descending order.')
+                    }),
+                    execute: async ({ items, columnName, order }) => {
+                        console.log(`[ACTION TRACE] Sorting Items by ${columnName} (${order})`);
+                        try {
+                            const sorted = [...items].sort((a, b) => {
+                                const colA = a.column_values?.find((c: any) => c.title?.toLowerCase() === columnName.toLowerCase() || c.id === columnName)?.text || '';
+                                const colB = b.column_values?.find((c: any) => c.title?.toLowerCase() === columnName.toLowerCase() || c.id === columnName)?.text || '';
+
+                                const numA = parseFloat(colA);
+                                const numB = parseFloat(colB);
+
+                                if (!isNaN(numA) && !isNaN(numB)) {
+                                    return order === 'asc' ? numA - numB : numB - numA;
+                                }
+
+                                return order === 'asc' ? colA.localeCompare(colB) : colB.localeCompare(colA);
+                            });
+                            return { success: true, sortedItems: sorted };
+                        } catch (error: any) {
+                            return { success: false, error: error.message };
+                        }
+                    }
+                }),
+                searchItemsByColumn: tool({
+                    description: 'Search for items on a board that have a specific value in a column. This is the most efficient way to find specific data like "Emergency" priority orders.',
+                    parameters: z.object({
+                        boardId: z.string().describe('The ID of the monday.com board'),
+                        columnId: z.string().describe('The ID of the column (e.g. "status", "priority"). Use getBoardSchema to find IDs.'),
+                        value: z.string().describe('The value to search for (e.g. "Emergency")'),
+                    }),
+                    execute: async ({ boardId, columnId, value }) => {
+                        console.log(`[ACTION TRACE] Searching Items on Board ${boardId} where ${columnId} is ${value}`);
+                        try {
+                            const items = await getItemsByColumnValue(boardId, columnId, value);
+                            return { success: true, count: items.length, items };
+                        } catch (error: any) {
+                            return { success: false, error: error.message };
+                        }
+                    }
+                }),
+                searchItemsByName: tool({
+                    description: 'Search for items on a board by their name (title).',
+                    parameters: z.object({
+                        boardId: z.string().describe('The ID of the monday.com board'),
+                        names: z.array(z.string()).describe('List of item names to search for.'),
+                    }),
+                    execute: async ({ boardId, names }) => {
+                        console.log(`[ACTION TRACE] Searching Items on Board ${boardId} by names: ${names.join(', ')}`);
+                        try {
+                            const items = await getItemsByNames(boardId, names);
+                            return { success: true, count: items.length, items };
+                        } catch (error: any) {
+                            return { success: false, error: error.message };
+                        }
+                    }
+                }),
+                calculateMetrics: tool({
+                    description: 'Calculate metrics (sum, average, count) from a list of items based on a numeric column.',
+                    parameters: z.object({
+                        items: z.array(z.any()).describe('The array of items to analyze.'),
+                        columnName: z.string().describe('The column name (title) or ID containing numeric data.'),
+                        operation: z.enum(['sum', 'average', 'count', 'min', 'max']).describe('The mathematical operation to perform.')
+                    }),
+                    execute: async ({ items, columnName, operation }) => {
+                        console.log(`[ACTION TRACE] Calculating ${operation} for ${columnName}`);
+                        try {
+                            const values = items.map(item => {
+                                const col = item.column_values?.find((c: any) =>
+                                    c.title?.toLowerCase() === columnName.toLowerCase() ||
+                                    c.id === columnName
+                                );
+                                if (!col) return null;
+                                // Clean the value (remove currency symbols, commas, etc)
+                                const cleanValue = (col.text || col.value || '').replace(/[^\d.-]/g, '');
+                                const num = parseFloat(cleanValue);
+                                return isNaN(num) ? null : num;
+                            }).filter(v => v !== null) as number[];
+
+                            if (values.length === 0 && operation !== 'count') {
+                                return { success: true, result: 0, note: "No numeric values found for this column." };
+                            }
+
+                            let result = 0;
+                            switch (operation) {
+                                case 'sum':
+                                    result = values.reduce((a, b) => a + b, 0);
+                                    break;
+                                case 'average':
+                                    result = values.reduce((a, b) => a + b, 0) / values.length;
+                                    break;
+                                case 'count':
+                                    result = items.length;
+                                    break;
+                                case 'min':
+                                    result = Math.min(...values);
+                                    break;
+                                case 'max':
+                                    result = Math.max(...values);
+                                    break;
+                            }
+
+                            return { success: true, operation, columnName, result, count: values.length };
                         } catch (error: any) {
                             return { success: false, error: error.message };
                         }
