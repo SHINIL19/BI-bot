@@ -142,6 +142,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                     }
                 })
             },
+            maxSteps: 5,
         });
 
         return result.toDataStreamResponse();
