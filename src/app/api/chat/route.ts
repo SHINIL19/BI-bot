@@ -309,7 +309,12 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
             maxSteps: 5,
         });
 
-        return result.toDataStreamResponse();
+        return result.toDataStreamResponse({
+            getErrorMessage: (err: any) => {
+                console.error("Stream error raw:", err);
+                return String(err?.message || err || 'Unknown stream error');
+            }
+        });
     } catch (error: any) {
         console.error("Agent Execution Error:", error);
         return new Response(JSON.stringify({ error: error?.message || String(error) }), {
