@@ -11,4 +11,10 @@ All notable changes to this project will be documented in this file.
 - Files modified: `package.json`, `package-lock.json`, `src/app/api/chat/route.ts`
 - Summary: Upgraded `@ai-sdk/google` to latest and `ai` to `4.1.66`. Removed `await` from `streamText` and added a TypeScript bypass for the `LanguageModelV1` / `LanguageModelV3` internal typing difference. This resolves a Zod parsing bug when Gemini-2.5-flash returns empty `parts` arrays.
 - Prompt or reason: User reported a Zod "invalid_type" exception missing the "parts" array during live data queries.
+- Commit reference: `f5c6a47`
+
+- UTC timestamp: 2026-03-03T12:00:00Z
+- Files modified: `tests/chat.spec.ts`
+- Summary: Updated the Playwright E2E UI test asserts to match the final Executive Dashboard components (Title: `BI-Bot`, Placeholder: `Ask about your Monday.com data...`) and removed the mock toggle `click()` since default is ON.
+- Prompt or reason: User requested a final retest verification before authorizing a concluding git push. 
 - Commit reference: pending

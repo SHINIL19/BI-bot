@@ -4,11 +4,11 @@ test('has title and can chat with mock response', async ({ page }) => {
     await page.goto('/');
 
     // Expect a title "to contain" a substring.
-    await expect(page).toHaveTitle(/BI Agent/); // Adjust to whatever title the app has
+    await expect(page).toHaveTitle(/BI-Bot/); // Adjust to whatever title the app has
 
-    // Check if we can toggle "Mock Data" logic and send a message. Since we forced it on the backend, 
-    // any query will get a mock response, so we just check if chat works.
-    const input = page.getByPlaceholder('Ask about your revenue, quarters, or margins...');
+    // The UI defaults to "Mock Data: ON", so we don't need to click it.
+
+    const input = page.getByPlaceholder('Ask about your Monday.com data...');
     await input.fill('What is the total value of all deals in the CRM?');
     await input.press('Enter');
 
