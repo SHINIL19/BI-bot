@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     // Live Mode: Use Vercel AI SDK
     try {
         const result = await streamText({
-            model: googleProvider('gemini-2.5-flash' as any), // Use available 2.5 model and bypass TS limits
+            model: googleProvider('gemini-3.1-pro-preview' as any), // Use available 3.1 model and bypass TS limits
             messages,
             system: `You are a Senior BI Expert and Data Analyst for a high-growth company. 
 You act as a founder-level AI agent communicating directly with executives.
