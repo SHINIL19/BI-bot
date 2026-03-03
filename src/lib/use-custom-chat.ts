@@ -89,6 +89,17 @@ export function useCustomChat({
                             } catch (e) {
                                 // Ignore parse errors on partial chunks
                             }
+                        } else if (line.startsWith('3:')) {
+                            // This indicates a stream error (e.g., rate limits, model crashes)
+                            try {
+                                const errorChunk = JSON.parse(line.substring(2));
+                                assistantContent += `\n\n[Error from AI Provider]: ${errorChunk}`;
+                                setMessages((prev) =>
+                                    prev.map(m => m.id === assistantMessageId ? { ...m, content: assistantContent } : m)
+                                );
+                            } catch (e) {
+                                // Fallback if not stringified JSON
+                            }
                         }
                     }
                 }

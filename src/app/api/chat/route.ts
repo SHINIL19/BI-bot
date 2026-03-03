@@ -109,8 +109,9 @@ Board B: Work Order Tracking (Post-Sales Operations)
 
 CRITICAL RULES:
 1. ALWAYS use your tools to fetch live data. Do not guess.
-2. "Data Confidence" Note: At the end of every data-driven response, you MUST append a distinct, bolded note labeled "Data Confidence:" explaining any caveats, missing fields, or assumptions you had to make due to messy data.
-3. Board Identification: Use the explicit Board IDs provided above whenever relevant.
+2. "Data Confidence" Note: At the end of every data-driven response, you MUST append a distinct, bolded note labeled "Data Confidence:" explaining any caveats.
+3. NEVER use getBoardItems to download large lists if you are looking for specific items. ALWAYS use searchItemsByColumn or filterBoardItems first to minimize token size.
+4. Keep your initial data requests extremely small (e.g. limit: 5) to avoid crashing the server due to memory limits.
 
 If you cannot find the requested data, explain why in a graceful, executive-friendly manner without throwing visible code errors.`,
             tools: {
@@ -143,15 +144,15 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                     },
                 }),
                 getBoardItems: tool({
-                    description: 'Fetch the latest raw items from a monday.com board. You MUST use getBoardSchema first to understand what the columns mean.',
+                    description: 'Fetch the latest raw items from a monday.com board. You MUST use getBoardSchema first to understand what the columns mean. WARNING: This returns massive amounts of data. Only use this for general overviews, not searching.',
                     parameters: z.object({
                         boardId: z.string().describe('The ID of the monday.com board'),
-                        limit: z.number().optional().describe('Number of items to fetch. Default is 25. Do not request more than 50 at a time.'),
+                        limit: z.number().optional().describe('Number of items to fetch. Default is 5. DO NOT EXCEED 10 to avoid memory crashes.'),
                     }),
                     execute: async ({ boardId, limit }: { boardId: string, limit?: number }) => {
-                        console.log(`[ACTION TRACE] Fetching Items for Board ${boardId}(Limit: ${limit || 25})`);
+                        console.log(`[ACTION TRACE] Fetching Items for Board ${boardId}(Limit: ${limit || 5})`);
                         try {
-                            const items = await getBoardItems(boardId, limit || 25);
+                            const items = await getBoardItems(boardId, Math.min(limit || 5, 20));
                             return { success: true, items };
                         } catch (error: any) {
                             return { success: false, error: error.message };
