@@ -1,0 +1,23 @@
+
+> bi-bot@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.7s
+  Running TypeScript ...
+Failed to compile.
+
+./src/app/api/chat/route.ts:53:13
+Type error: Property 'defaultObjectGenerationMode' is missing in type 'LanguageModelV3' but required in type 'LanguageModelV1'.
+
+[0m [90m 51 |[39m     [36mtry[39m {
+ [90m 52 |[39m         [36mconst[39m result [33m=[39m [36mawait[39m streamText({
+[31m[1m>[22m[39m[90m 53 |[39m             model[33m:[39m google([32m'gemini-2.5-flash'[39m)[33m,[39m [90m// Use available gemini-2.5-flash model[39m
+ [90m    |[39m             [31m[1m^[22m[39m
+ [90m 54 |[39m             messages[33m,[39m
+ [90m 55 |[39m             system[33m:[39m [32m`You are a Senior BI Expert and Data Analyst for a high-growth company. [39m
+ [90m 56 |[39m [32mYou act as a founder-level AI agent communicating directly with executives.[39m[0m
+Next.js build worker exited with code: 1 and signal: null

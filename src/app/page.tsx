@@ -41,9 +41,6 @@ export default function DashboardPage() {
     onResponse: (response) => {
       addLog("info", `Received response streams [Status: ${response.status}]`);
     },
-    onToolCall: (toolName, args) => {
-      addLog("info", `Agent requested Tool: ${toolName}`, JSON.stringify(args, null, 2));
-    },
     onFinish: (message) => {
       addLog("success", "AI response completed.");
     },

@@ -1,9 +1,9 @@
 import fs from 'fs';
 
 async function testLive() {
-    console.log("Pinging http://localhost:3000/api/chat...");
+    console.log("Pinging https://bi-bot-plum.vercel.app/api/chat...");
     try {
-        const response = await fetch('http://localhost:3000/api/chat', {
+        const response = await fetch('https://bi-bot-plum.vercel.app/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -49,9 +49,8 @@ export async function POST(req: Request) {
 
     // Live Mode: Use Vercel AI SDK
     try {
-        const result = streamText({
-            // @ts-ignore - Ignore type differences between ai@4 and @ai-sdk/google@latest LanguageModel versions
-            model: google('gemini-2.5-flash'), // Use available gemini-2.5-flash model
+        const result = await streamText({
+            model: google('gemini-3.1-pro-preview') as any, // Bypass V3 vs V1 TS error
             messages,
             system: `You are a Senior BI Expert and Data Analyst for a high-growth company. 
 You act as a founder-level AI agent communicating directly with executives.
