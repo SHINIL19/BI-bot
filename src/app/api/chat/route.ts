@@ -49,7 +49,8 @@ export async function POST(req: Request) {
 
     // Live Mode: Use Vercel AI SDK
     try {
-        const result = await streamText({
+        const result = streamText({
+            // @ts-ignore - Ignore type differences between ai@4 and @ai-sdk/google@latest LanguageModel versions
             model: google('gemini-2.5-flash'), // Use available gemini-2.5-flash model
             messages,
             system: `You are a Senior BI Expert and Data Analyst for a high-growth company. 
