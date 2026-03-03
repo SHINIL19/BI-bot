@@ -5,7 +5,7 @@ BI-bot is a Founder-Level AI Assistant designed to provide dynamic, real-time in
 ## Features
 
 - **Live Data Integration**: Connects securely to Monday.com via GraphQL to fetch the latest schemas and items. 
-- **Agentic AI**: Built with the Vercel AI SDK and Google's Gemini 1.5 Flash model. The agent is capable of autonomous tool calling to find board IDs, fetch schemas, investigate records, and perform granular searches.
+- **Agentic AI**: Built with the Vercel AI SDK and Google's Gemini 2.5 Flash model. The agent is capable of autonomous tool calling to find board IDs, fetch schemas, investigate records, and perform granular searches.
 - **Advanced Data Tools**: Includes specialized tools for searching items by column value (e.g., "Emergency" priority), filtering results, sorting by metrics, and calculating sums/averages across datasets.
 - **Strict Data Governance**: Incorporates robust data validation context (handling messy dates, missing values, and unformatted currencies) right into the system prompt.
 - **Glassmorphism UI**: A sleek, modern dashboard built with Next.js 15, Tailwind CSS, and shadcn/ui.
