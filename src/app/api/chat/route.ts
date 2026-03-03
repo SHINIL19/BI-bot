@@ -1,12 +1,7 @@
-import { google, createGoogleGenerativeAI } from '@ai-sdk/google';
+import { google } from '@ai-sdk/google';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { getBoards, getBoardSchema, getBoardItems, getItemsByColumnValue, getItemsByNames } from '@/lib/monday';
-
-// Explicitly configure Google provider to support GEMINI_API_KEY
-const googleProvider = createGoogleGenerativeAI({
-    apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-});
 
 // Define a more specific schema for Monday items to satisfy Gemini's tool validation
 const MondayItemSchema = z.object({
@@ -55,7 +50,7 @@ export async function POST(req: Request) {
     // Live Mode: Use Vercel AI SDK
     try {
         const result = await streamText({
-            model: googleProvider('gemini-3.1-pro-preview' as any), // Use available 3.1 model and bypass TS limits
+            model: google('gemini-2.5-flash'), // Use available gemini-2.5-flash model
             messages,
             system: `You are a Senior BI Expert and Data Analyst for a high-growth company. 
 You act as a founder-level AI agent communicating directly with executives.

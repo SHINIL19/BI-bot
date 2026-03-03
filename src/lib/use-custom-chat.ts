@@ -12,12 +12,14 @@ export function useCustomChat({
     onResponse,
     onFinish,
     onError,
+    onToolCall,
 }: {
     api: string;
     body?: any;
     onResponse?: (res: Response) => void;
     onFinish?: (msg: Message) => void;
     onError?: (err: Error) => void;
+    onToolCall?: (tool: string, args: any) => void;
 }) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -99,6 +101,16 @@ export function useCustomChat({
                                 );
                             } catch (e) {
                                 // Fallback if not stringified JSON
+                            }
+                        } else if (line.startsWith('9:')) {
+                            // This indicates a tool call
+                            try {
+                                const toolChunk = JSON.parse(line.substring(2));
+                                if (onToolCall && toolChunk.toolName) {
+                                    onToolCall(toolChunk.toolName, toolChunk.args);
+                                }
+                            } catch (e) {
+                                // Ignore tool parse errors on partials
                             }
                         }
                     }
