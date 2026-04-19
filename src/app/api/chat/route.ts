@@ -312,7 +312,7 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
                 const rawString = String(err?.message || err);
                 
                 // Return exact error string back to the user to debug Vercel environment/timeout
-                return `Server Execution Error: ${rawString}`;
+                return `Server Execution Error [${settings?.provider?.toUpperCase()}]: ${rawString}`;
             }
         });
     } catch (error: any) {
