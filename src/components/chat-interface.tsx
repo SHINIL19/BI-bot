@@ -104,9 +104,16 @@ export function ChatInterface({
                     const hasText = m.content && m.content.trim() !== '';
                     const hasTools = m.toolInvocations && m.toolInvocations.length > 0;
 
-                    // Hide completely blank intermediate ghosts
+                    // EXPLICIT DEBUGGING: Render the exact raw state if it somehow evaluates to 0 text and 0 tools!
                     if (m.role === 'assistant' && !hasText && !hasTools) {
-                        return null;
+                        return (
+                           <div key={m.id} className="flex flex-col w-full gap-4 opacity-50 border border-yellow-500/50 p-2 rounded-md my-2">
+                               <span className="text-[10px] text-yellow-500 font-mono">DEBUG RAW MESSAGE OBJECT:</span>
+                               <pre className="text-[9px] text-yellow-600/70 whitespace-pre-wrap">{JSON.stringify(m, null, 2)}</pre>
+                               <span className="text-[10px] text-red-500 font-mono mt-2">DEBUG RAW ERROR OBJECT:</span>
+                               <pre className="text-[9px] text-red-400/70 whitespace-pre-wrap">{JSON.stringify(error?.message || "No Error Object Found")}</pre>
+                           </div>
+                        );
                     }
                     
                     return (
