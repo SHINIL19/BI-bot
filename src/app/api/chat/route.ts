@@ -1,4 +1,7 @@
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { getBoards, getBoardSchema, getBoardItems, getItemsByColumnValue, getItemsByNames } from '@/lib/monday';
@@ -15,42 +18,37 @@ const MondayItemSchema = z.object({
     })).optional()
 });
 
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
-
 export async function POST(req: Request) {
-    const { messages, mockMode } = await req.json();
-
-    if (mockMode) {
-        // Return a mocked stream for UI verification without using real AI/API tokens
-        const mockResponse = "This is a **mock response**. The agent is in Mock State. I can see your Monday.com boards conceptually, but I am not fetching live data right now to save API limits.\n\n*Toggle off Mock Data to run a live query.*";
-
-        // Create a simple ReadableStream to simulate streaming
-        const encoder = new TextEncoder();
-        const stream = new ReadableStream({
-            async start(controller) {
-                // Enqueue text chunks split by space to simulate typing
-                const chunks = mockResponse.split(' ');
-                for (const chunk of chunks) {
-                    controller.enqueue(encoder.encode(`0:"${chunk} "\n`));
-                    await new Promise(r => setTimeout(r, 50)); // Artificial delay
-                }
-                controller.close();
-            }
-        });
-
-        return new Response(stream, {
-            headers: {
-                'Content-Type': 'text/plain; charset=utf-8',
-                'x-vercel-ai-data-stream': 'v1'
-            }
-        });
+    let body;
+    try {
+        body = await req.json();
+    } catch {
+        return new Response(JSON.stringify({ error: "Invalid JSON payload" }), { status: 400 });
     }
+    const { messages, settings } = body;
 
     // Live Mode: Use Vercel AI SDK
     try {
+        let modelInstance;
+        
+        if (settings?.provider === 'openai') {
+            const openai = createOpenAI({ apiKey: settings.apiKey || '' });
+            modelInstance = openai(settings.model || 'gpt-4o');
+        } else if (settings?.provider === 'anthropic') {
+            const anthropic = createAnthropic({ apiKey: settings.apiKey || '' });
+            modelInstance = anthropic(settings.model || 'claude-3-5-sonnet-20241022');
+        } else if (settings?.provider === 'openrouter') {
+            const openrouter = createOpenRouter({ 
+                apiKey: settings.apiKey || ''
+            });
+            modelInstance = openrouter(settings.model || 'openrouter/auto');
+        } else {
+            const google = createGoogleGenerativeAI({ apiKey: settings?.apiKey || process.env.GEMINI_API_KEY || '' });
+            modelInstance = google(settings?.model || 'gemini-1.5-pro') as any;
+        }
+
         const result = await streamText({
-            model: google('gemini-3.1-pro-preview') as any, // Bypass V3 vs V1 TS error
+            model: modelInstance,
             messages,
             system: `You are a Senior BI Expert and Data Analyst for a high-growth company. 
 You act as a founder-level AI agent communicating directly with executives.
@@ -308,7 +306,11 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
         return result.toDataStreamResponse({
             getErrorMessage: (err: any) => {
                 console.error("Stream error raw:", err);
-                return String(err?.message || err || 'Unknown stream error');
+                const rawString = String(err?.message || err);
+                if (rawString.includes('429') || rawString.includes('rate-limit') || rawString.includes('Provider returned error')) {
+                    return "The selected AI model is currently heavily rate-limited or experiencing upstream traffic. Please try selecting a different model in the Settings page or validating your API key.";
+                }
+                return "An unexpected server error occurred connecting to the AI provider. Let's try again or select a different model in Settings!";
             }
         });
     } catch (error: any) {

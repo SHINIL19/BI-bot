@@ -58,7 +58,16 @@ You are a Senior Full-Stack Engineer and BI Expert. Your goal is to build a high
 * 
 **Deployment:** Prepare for Vercel deployment with necessary Environment Variables.
 
+### Phase 5: Dynamic Settings UI (Complete)
 
+* 
+**Model Flexibility:** Built a dedicated `/settings` page to allow standard and dynamic generation models (Anthropic, OpenAI, Gemini, OpenRouter Auto).
+
+* 
+**Local Key Storage:** Hooks dynamically to accept and persist client-side API Keys, routing seamlessly via Vercel AI 4.1 Native architecture.
+
+* 
+**Live Model Loading:** Set up server-side secure `/api/models` endpoint for fetching active and available AI model permutations based upon dynamically supplied external Keys, injected into a global Chat Header mapping selector.
 
 ## 3. Technical Constraints & Logic
 

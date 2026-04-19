@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-import { Send, Bot, User, ShieldAlert, Zap } from "lucide-react";
+import { Send, Bot, User, ShieldAlert, ChevronDown } from "lucide-react";
 import { Message } from "@/lib/use-custom-chat";
+import { useSettings } from "@/lib/use-settings";
 
 interface ChatInterfaceProps {
     chatHelpers: {
@@ -18,19 +19,34 @@ interface ChatInterfaceProps {
         handleSubmit: (e: React.FormEvent<HTMLFormElement>, options?: { data?: any }) => void;
         isLoading: boolean;
     };
-    isMockMode: boolean;
-    setIsMockMode: (checked: boolean) => void;
     className?: string;
 }
 
 export function ChatInterface({
     chatHelpers,
-    isMockMode,
-    setIsMockMode,
     className
 }: ChatInterfaceProps) {
     const { messages, input, handleInputChange, handleSubmit, isLoading } = chatHelpers;
     const scrollRef = useRef<HTMLDivElement>(null);
+    const { settings, saveSettings } = useSettings();
+    const [availableModels, setAvailableModels] = useState<{id: string, name: string}[]>([]);
+
+    useEffect(() => {
+        if (settings?.apiKey && settings?.provider) {
+            fetch('/api/models', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider: settings.provider, apiKey: settings.apiKey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.models) {
+                    setAvailableModels(data.models);
+                }
+            })
+            .catch(console.error);
+        }
+    }, [settings?.apiKey, settings?.provider]);
 
     // Auto-scroll to bottom on new message
     useEffect(() => {
@@ -48,26 +64,27 @@ export function ChatInterface({
                         <Bot className="h-5 w-5 text-[#0073ea]" />
                         BI-Bot
                     </h2>
-                    <p className="text-xs text-muted-foreground">Executive Data Assistant</p>
+                    <p className="text-xs text-muted-foreground hidden sm:block">Executive Data Assistant</p>
                 </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center space-x-2">
-                        <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                            <Zap className="h-3 w-3" />
-                            Mock Data
-                        </span>
-                        <Switch
-                            checked={isMockMode}
-                            onCheckedChange={setIsMockMode}
-                            className="data-[state=checked]:bg-[#0073ea]"
-                        />
+                
+                {availableModels.length > 0 && settings && (
+                    <div className="relative">
+                        <select
+                            value={settings.model || ''}
+                            onChange={(e) => saveSettings({ ...settings, model: e.target.value })}
+                            className="appearance-none bg-background text-xs border border-border/50 rounded-md py-1.5 pl-3 pr-8 focus:outline-none focus:ring-1 focus:ring-[#0073ea] max-w-[150px] truncate"
+                        >
+                            {availableModels.map(m => (
+                                <option key={m.id} value={m.id}>{m.name || m.id}</option>
+                            ))}
+                        </select>
+                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-6" ref={scrollRef}>
                 {messages.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-70">
                         <div className="h-12 w-12 rounded-full bg-[#0073ea]/10 flex items-center justify-center">
@@ -83,17 +100,23 @@ export function ChatInterface({
                 )}
 
                 {messages.map((m: Message) => (
-                    <div key={m.id} className={cn("flex gap-3 max-w-[85%]", m.role === 'user' ? "ml-auto" : "mr-auto")}>
+                    <div key={m.id} className={cn("flex gap-3 max-w-[85%] break-words w-fit", m.role === 'user' ? "ml-auto flex-row-reverse" : "mr-auto")}>
                         {m.role === 'assistant' && (
                             <div className="h-8 w-8 shrink-0 rounded-full bg-[#0073ea]/10 flex items-center justify-center mt-1">
                                 <Bot className="h-4 w-4 text-[#0073ea]" />
                             </div>
                         )}
 
-                        <div className="space-y-2">
+                        {m.role === 'user' && (
+                            <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-1">
+                                <User className="h-4 w-4 text-primary" />
+                            </div>
+                        )}
+
+                        <div className="space-y-2 flex flex-col max-w-full">
                             <div
                                 className={cn(
-                                    "px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed shadow-sm",
+                                    "px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed shadow-sm break-words overflow-x-hidden",
                                     m.role === 'user'
                                         ? "bg-[#0073ea] text-white rounded-tr-sm"
                                         : "bg-muted/50 text-foreground border border-border/50 rounded-tl-sm"
@@ -101,15 +124,7 @@ export function ChatInterface({
                             >
                                 {m.content}
                             </div>
-
-                            {/* Optional Data Confidence Note rendering logic could go here based on annotations later */}
                         </div>
-
-                        {m.role === 'user' && (
-                            <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-                                <User className="h-4 w-4 text-primary" />
-                            </div>
-                        )}
                     </div>
                 ))}
 
@@ -132,14 +147,7 @@ export function ChatInterface({
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        // Optional: inject custom mock handling here if in mock mode,
-                        // otherwise hand off to Vercel AI SDK
-                        if (isMockMode) {
-                            const syntheticSubmitEvent = e as React.FormEvent<HTMLFormElement>;
-                            handleSubmit(syntheticSubmitEvent, { data: { mock: true } });
-                        } else {
-                            handleSubmit(e);
-                        }
+                        handleSubmit(e);
                     }}
                     className="relative flex items-center"
                 >

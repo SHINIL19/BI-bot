@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useCustomChat } from "@/lib/use-custom-chat";
 import { ChatInterface } from "@/components/chat-interface";
 import { ActionTrace, TraceLog } from "@/components/action-trace";
+import { useSettings } from "@/lib/use-settings";
 
 export default function DashboardPage() {
-  const [isMockMode, setIsMockMode] = useState(true);
   const [logs, setLogs] = useState<TraceLog[]>([]);
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function DashboardPage() {
         id: "init",
         timestamp: new Date(),
         type: "info",
-        message: "System initialized. Mock mode is active.",
+        message: "System initialized. Live backend ready.",
       }
     ]);
   }, []);
@@ -33,10 +33,12 @@ export default function DashboardPage() {
     ]);
   };
 
+  const { settings } = useSettings();
+
   const chatHelpers = useCustomChat({
     api: "/api/chat",
     body: {
-      mockMode: isMockMode,
+      settings,
     },
     onResponse: (response) => {
       addLog("info", `Received response streams [Status: ${response.status}]`);
@@ -57,8 +59,6 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-gradient-to-tr from-[#0073ea]/20 to-transparent opacity-20 group-hover:opacity-30 transition-opacity duration-1000 pointer-events-none" />
           <ChatInterface
             chatHelpers={chatHelpers}
-            isMockMode={isMockMode}
-            setIsMockMode={setIsMockMode}
           />
         </div>
 

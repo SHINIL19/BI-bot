@@ -8,13 +8,14 @@ BI-bot is a Founder-Level AI Assistant designed to provide dynamic, real-time in
 - **Agentic AI**: Built with the Vercel AI SDK and Google's Gemini 3.1 Pro model. The agent is capable of autonomous tool calling to find board IDs, fetch schemas, investigate records, and perform granular searches.
 - **Advanced Data Tools**: Includes specialized tools for searching items by column value (e.g., "Emergency" priority), filtering results, sorting by metrics, and calculating sums/averages across datasets.
 - **Strict Data Governance**: Incorporates robust data validation context (handling messy dates, missing values, and unformatted currencies) right into the system prompt.
+- **Dynamic AI Settings**: A robust settings interface to dynamically switch between Google Gemini, OpenAI, Anthropic, and OpenRouter models directly in the app. Includes an integrated Dropdown Selector for querying AutoModels or specific endpoints with client-side API Key storage safely detached from environment variables.
 - **Glassmorphism UI**: A sleek, modern dashboard built with Next.js 15, Tailwind CSS, and shadcn/ui.
 - **Live Action Trace**: Provides full backend visibility, showing the user exactly what tools the AI is executing under the hood.
 
 ## Architecture
 
 - **Frontend**: Next.js (App Router), React, TailwindCSS, Framer Motion
-- **Backend/AI**: Vercel AI SDK (`ai`, `@ai-sdk/google`)
+- **Backend/AI**: Vercel AI SDK (`ai`, `@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/anthropic`, `@openrouter/ai-sdk-provider`)
 - **Data Source**: Monday.com GraphQL API (`api.monday.com/v2`)
 
 ## Getting Started
@@ -24,11 +25,12 @@ BI-bot is a Founder-Level AI Assistant designed to provide dynamic, real-time in
 npm install
 ```
 
-2. Configure Environment Variables in `.env.local`:
+2. Configure Environment Variables in `.env.local` (Optional if using UI settings):
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 MONDAY_API_TOKEN=your_monday_api_token
 ```
+*Note: You can skip configuring API keys here and input them directly from the BI-Bot Settings UI in your browser.*
 
 3. Run the development server:
 ```bash
