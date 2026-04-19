@@ -100,8 +100,11 @@ export function ChatInterface({
                 )}
 
                 {messages.map((m: Message) => {
-                    // Hide intermediate tool-execution blocks that have no user-facing text
-                    if (m.role === 'assistant' && (!m.content || !m.content.trim())) {
+                    const hasText = m.content && m.content.trim() !== '';
+                    const hasTools = m.toolInvocations && m.toolInvocations.length > 0;
+
+                    // Hide completely blank intermediate ghosts
+                    if (m.role === 'assistant' && !hasText && !hasTools) {
                         return null;
                     }
                     
@@ -119,7 +122,7 @@ export function ChatInterface({
                             </div>
                         )}
 
-                        {m.content?.trim() && (
+                        {hasText ? (
                             <div className="space-y-2 flex flex-col max-w-full">
                                 <div
                                     className={cn(
@@ -132,7 +135,13 @@ export function ChatInterface({
                                     {m.content}
                                 </div>
                             </div>
-                        )}
+                        ) : hasTools ? (
+                            <div className="space-y-2 flex flex-col max-w-full">
+                                <div className="px-4 py-3 rounded-2xl text-sm text-muted-foreground italic bg-muted/50 border border-border/50 rounded-tl-sm opacity-80">
+                                    ⚙️ Fetched live data from Monday.com ({m.toolInvocations?.[0]?.toolName}). The model ended its response before summarizing.
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
                 );
             })}
