@@ -18,6 +18,9 @@ const MondayItemSchema = z.object({
     })).optional()
 });
 
+// Allow streaming execution for up to 60 seconds natively on Vercel deployment
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
     let body;
     try {
@@ -307,10 +310,9 @@ If you cannot find the requested data, explain why in a graceful, executive-frie
             getErrorMessage: (err: any) => {
                 console.error("Stream error raw:", err);
                 const rawString = String(err?.message || err);
-                if (rawString.includes('429') || rawString.includes('rate-limit') || rawString.includes('Provider returned error')) {
-                    return "The selected AI model is currently heavily rate-limited or experiencing upstream traffic. Please try selecting a different model in the Settings page or validating your API key.";
-                }
-                return "An unexpected server error occurred connecting to the AI provider. Let's try again or select a different model in Settings!";
+                
+                // Return exact error string back to the user to debug Vercel environment/timeout
+                return `Server Execution Error: ${rawString}`;
             }
         });
     } catch (error: any) {
