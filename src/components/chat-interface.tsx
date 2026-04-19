@@ -109,41 +109,57 @@ export function ChatInterface({
                     }
                     
                     return (
-                        <div key={m.id} className={cn("flex gap-3 max-w-[85%] break-words w-fit", m.role === 'user' ? "ml-auto flex-row-reverse" : "mr-auto")}>
-                            {m.role === 'assistant' && (
-                                <div className="h-8 w-8 shrink-0 rounded-full bg-[#0073ea]/10 flex items-center justify-center mt-1">
-                                    <Bot className="h-4 w-4 text-[#0073ea]" />
+                        <div key={m.id} className="flex flex-col w-full gap-4">
+                            {/* WhatsApp-style System Message for Tool Invocations */}
+                            {hasTools && (
+                                <div className="flex flex-col items-center justify-center w-full gap-2 my-2">
+                                    {m.toolInvocations?.map(tool => (
+                                        <div key={tool.toolCallId} className="px-3 py-1 bg-muted border border-border/40 rounded-full text-[10px] text-muted-foreground shadow-sm flex items-center gap-1.5 backdrop-blur-sm mx-auto w-fit">
+                                            <span className="animate-[spin_3s_linear_infinite] text-[10px]">⚙️</span> 
+                                            System: Executed {tool.toolName}
+                                        </div>
+                                    ))}
+                                    
+                                    {/* Fallback if model halted stream */}
+                                    {!hasText && (
+                                        <div className="px-3 py-1 bg-muted/40 border border-border/30 rounded-full text-[10px] text-muted-foreground/70 shadow-sm mx-auto w-fit opacity-80">
+                                            ⚠️ Connection to model stream ended before summarizing
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
-                        {m.role === 'user' && (
-                            <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-                                <User className="h-4 w-4 text-primary" />
-                            </div>
-                        )}
-
-                        {hasText ? (
-                            <div className="space-y-2 flex flex-col max-w-full">
-                                <div
-                                    className={cn(
-                                        "px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed shadow-sm break-words overflow-x-hidden",
-                                        m.role === 'user'
-                                            ? "bg-[#0073ea] text-white rounded-tr-sm"
-                                            : "bg-muted/50 text-foreground border border-border/50 rounded-tl-sm"
+                            {/* Standard Chat Bubble Layout */}
+                            {hasText && (
+                                <div className={cn("flex gap-3 max-w-[85%] break-words w-fit", m.role === 'user' ? "ml-auto flex-row-reverse" : "mr-auto")}>
+                                    {m.role === 'assistant' && (
+                                        <div className="h-8 w-8 shrink-0 rounded-full bg-[#0073ea]/10 flex items-center justify-center mt-1">
+                                            <Bot className="h-4 w-4 text-[#0073ea]" />
+                                        </div>
                                     )}
-                                >
-                                    {m.content}
+
+                                    {m.role === 'user' && (
+                                        <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-1">
+                                            <User className="h-4 w-4 text-primary" />
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2 flex flex-col max-w-full">
+                                        <div
+                                            className={cn(
+                                                "px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed shadow-sm break-words overflow-x-hidden",
+                                                m.role === 'user'
+                                                    ? "bg-[#0073ea] text-white rounded-tr-sm"
+                                                    : "bg-muted/50 text-foreground border border-border/50 rounded-tl-sm"
+                                            )}
+                                        >
+                                            {m.content}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ) : hasTools ? (
-                            <div className="space-y-2 flex flex-col max-w-full">
-                                <div className="px-4 py-3 rounded-2xl text-sm text-muted-foreground italic bg-muted/50 border border-border/50 rounded-tl-sm opacity-80">
-                                    ⚙️ Fetched live data from Monday.com ({m.toolInvocations?.[0]?.toolName}). The model ended its response before summarizing.
-                                </div>
-                            </div>
-                        ) : null}
-                    </div>
-                );
+                            )}
+                        </div>
+                    );
             })}
 
                 {isLoading && (
