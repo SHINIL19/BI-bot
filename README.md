@@ -10,7 +10,8 @@ BI-bot is a Founder-Level AI Assistant designed to provide dynamic, real-time in
 - **Strict Data Governance**: Incorporates robust data validation context (handling messy dates, missing values, and unformatted currencies) right into the system prompt.
 - **Dynamic AI Settings**: A robust settings interface to dynamically switch between Google Gemini, OpenAI, Anthropic, and OpenRouter models directly in the app. Includes an integrated Dropdown Selector for querying AutoModels or specific endpoints with client-side API Key storage safely detached from environment variables.
 - **Glassmorphism UI**: A sleek, modern dashboard built with Next.js 15, Tailwind CSS, and shadcn/ui.
-- **Live Action Trace**: Provides full backend visibility, showing the user exactly what tools the AI is executing under the hood.
+- **WhatsApp-Style Action Trace**: Provides full backend visibility, rendering background tool executions natively as centered system chips (decoupled from AI speech bubbles) so you can seamlessly observe data pipelines.
+- **Resilient Stream Handlers**: Gracefully manages API rate limits, timeouts, and `401 Unauthorized` states inherent to free-tier AI endpoints (like OpenRouter Auto), rendering explicit fallbacks without fracturing the DOM.
 
 ## Architecture
 
