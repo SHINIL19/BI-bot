@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Send, Bot, User, ShieldAlert, ChevronDown } from "lucide-react";
-import { Message } from "@/lib/use-custom-chat";
+import { Message } from "ai";
 import { useSettings } from "@/lib/use-settings";
 
 interface ChatInterfaceProps {
@@ -18,6 +18,7 @@ interface ChatInterfaceProps {
         handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
         handleSubmit: (e: React.FormEvent<HTMLFormElement>, options?: { data?: any }) => void;
         isLoading: boolean;
+        error?: Error | undefined;
     };
     className?: string;
 }
@@ -26,7 +27,7 @@ export function ChatInterface({
     chatHelpers,
     className
 }: ChatInterfaceProps) {
-    const { messages, input, handleInputChange, handleSubmit, isLoading } = chatHelpers;
+    const { messages, input, handleInputChange, handleSubmit, isLoading, error } = chatHelpers;
     const scrollRef = useRef<HTMLDivElement>(null);
     const { settings, saveSettings } = useSettings();
     const [availableModels, setAvailableModels] = useState<{id: string, name: string}[]>([]);
@@ -171,6 +172,19 @@ export function ChatInterface({
                             <div className="h-1.5 w-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
                             <div className="h-1.5 w-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
                             <div className="h-1.5 w-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                    </div>
+                )}
+                
+                {error && (
+                    <div className="flex gap-3 max-w-[85%] mr-auto">
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-[#0073ea]/10 flex items-center justify-center mt-1">
+                            <Bot className="h-4 w-4 text-[#0073ea]" />
+                        </div>
+                        <div className="space-y-2 flex flex-col max-w-full">
+                            <div className="px-4 py-3 rounded-2xl text-sm text-red-400 bg-red-950/20 border border-red-900/50 rounded-tl-sm break-words overflow-x-hidden">
+                                [System Stream Error]: {error.message || String(error)}
+                            </div>
                         </div>
                     </div>
                 )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useCustomChat } from "@/lib/use-custom-chat";
+import { useChat } from '@ai-sdk/react';
 import { ChatInterface } from "@/components/chat-interface";
 import { ActionTrace, TraceLog } from "@/components/action-trace";
 import { useSettings } from "@/lib/use-settings";
@@ -35,7 +35,7 @@ export default function DashboardPage() {
 
   const { settings } = useSettings();
 
-  const chatHelpers = useCustomChat({
+  const chatHelpers = useChat({
     api: "/api/chat",
     body: {
       settings,
