@@ -99,13 +99,19 @@ export function ChatInterface({
                     </div>
                 )}
 
-                {messages.map((m: Message) => (
-                    <div key={m.id} className={cn("flex gap-3 max-w-[85%] break-words w-fit", m.role === 'user' ? "ml-auto flex-row-reverse" : "mr-auto")}>
-                        {m.role === 'assistant' && (
-                            <div className="h-8 w-8 shrink-0 rounded-full bg-[#0073ea]/10 flex items-center justify-center mt-1">
-                                <Bot className="h-4 w-4 text-[#0073ea]" />
-                            </div>
-                        )}
+                {messages.map((m: Message) => {
+                    // Hide intermediate tool-execution blocks that have no user-facing text
+                    if (m.role === 'assistant' && (!m.content || !m.content.trim())) {
+                        return null;
+                    }
+                    
+                    return (
+                        <div key={m.id} className={cn("flex gap-3 max-w-[85%] break-words w-fit", m.role === 'user' ? "ml-auto flex-row-reverse" : "mr-auto")}>
+                            {m.role === 'assistant' && (
+                                <div className="h-8 w-8 shrink-0 rounded-full bg-[#0073ea]/10 flex items-center justify-center mt-1">
+                                    <Bot className="h-4 w-4 text-[#0073ea]" />
+                                </div>
+                            )}
 
                         {m.role === 'user' && (
                             <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-1">
@@ -113,20 +119,23 @@ export function ChatInterface({
                             </div>
                         )}
 
-                        <div className="space-y-2 flex flex-col max-w-full">
-                            <div
-                                className={cn(
-                                    "px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed shadow-sm break-words overflow-x-hidden",
-                                    m.role === 'user'
-                                        ? "bg-[#0073ea] text-white rounded-tr-sm"
-                                        : "bg-muted/50 text-foreground border border-border/50 rounded-tl-sm"
-                                )}
-                            >
-                                {m.content}
+                        {m.content?.trim() && (
+                            <div className="space-y-2 flex flex-col max-w-full">
+                                <div
+                                    className={cn(
+                                        "px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed shadow-sm break-words overflow-x-hidden",
+                                        m.role === 'user'
+                                            ? "bg-[#0073ea] text-white rounded-tr-sm"
+                                            : "bg-muted/50 text-foreground border border-border/50 rounded-tl-sm"
+                                    )}
+                                >
+                                    {m.content}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
-                ))}
+                );
+            })}
 
                 {isLoading && (
                     <div className="flex gap-3 max-w-[85%] mr-auto animate-pulse">
